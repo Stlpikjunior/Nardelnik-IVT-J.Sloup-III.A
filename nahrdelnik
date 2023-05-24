@@ -1,0 +1,92 @@
+
+
+import tkinter as tk
+
+import random as rd
+# gcd = mt.gcd(240,400)
+# print(gcd)
+
+root = tk.Tk()
+
+width_can = 500
+height_can = 500
+diameter = 20
+colours = ['lime','yellow','magenta','turquoise']
+count = 40
+count_colour = 10
+rezerva = 40
+movable_list = []
+processed = []
+threaded_count = 0
+
+canvas = tk.Canvas(root, width = width_can, height = height_can, bg = 'white')
+canvas.pack()
+
+def setup():
+    global movable_list
+    #img = tk.PhotoImage(file = 'images/koralik_nit.png')
+    #canvas.create_image(rezerva+diameter/2,height_can-rezerva-diameter/2, image=img, anchor=tk.NW)
+    canvas.create_line(rezerva,height_can-rezerva+diameter/2,width_can - rezerva-diameter/2,height_can-rezerva+diameter/2)
+    for i in range(40):
+        x_rand = rd.randint(0, width_can-(rezerva+1))
+        y_rand = rd.randint(0, height_can -(rezerva+1))
+        movable_list.append(canvas.create_oval(x_rand,y_rand,x_rand+diameter,y_rand+diameter, fill = colours[i//count_colour]))
+    
+
+def checkit(e):
+    global processed, movable_list
+    item_list = (canvas.find_overlapping(e.x,e.y,e.x+1,e.y+1))   
+    if len(item_list) !=0 and item_list[0] in movable_list:
+        if len(processed)==0:
+            processed.append(item_list[0])
+            movable_list.remove(item_list[0])
+            move_it()
+
+def move_it():
+    global processed
+    if len(processed)!=0:
+        item_coords = canvas.coords(processed[0])
+        item_x = int(item_coords[0])
+        item_y = int(item_coords[1])
+        diff_x = width_can-rezerva- item_x
+        diff_y = height_can - rezerva- item_y
+        move_x = 0
+        move_y = 0
+        if diff_x > diff_y:
+          move_x = diff_x/diff_y
+          move_y =1
+        elif diff_y > diff_x:
+          move_x = 1
+          move_y = diff_y/diff_x
+        
+        if move_x!=0 and move_y !=0:
+            canvas.move(processed[0],move_x,move_y)
+            canvas.after(5,move_it)
+        else:
+            canvas.coords(processed[0],int(width_can-rezerva),int( height_can-rezerva),int(width_can-rezerva+diameter),int( height_can-rezerva+diameter))
+            hooking()
+          
+
+def hooking():
+  global threaded_count
+  
+  if threaded_count<10:
+    item_coords = canvas.coords(processed[0])
+    item_x = int(item_coords[0])
+    if item_x != rezerva+(threaded_count-1)*diameter:
+      canvas.move(processed[0],-5,0)
+      canvas.after(5,hooking)
+    else:
+      threaded_count +=1
+      processed.clear()
+      
+
+canvas.bind('<Button-1>', checkit)
+
+
+setup()
+move_it()
+
+
+
+root.mainloop()
